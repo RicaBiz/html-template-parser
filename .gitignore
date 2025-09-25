@@ -1,0 +1,12 @@
+﻿################################################################################
+# Il file gitignore è stato creato automaticamente da Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/html-component-parser
+/obj
+/html-component-parser.csproj
+/bin/Debug/net8.0-windows
+*.html
+/html-template-parser.csproj
+/html-template-parser.csproj.user
+/.gitignore
