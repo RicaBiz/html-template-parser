@@ -1,4 +1,4 @@
-# html-template-parser
+# html-template-parser RicaBiz
 <hr />
 
 # Easily generate new html pages and articles using templates!
