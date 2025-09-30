@@ -1,9 +1,10 @@
 # html-template-parser
 <hr />
-<h1>Easily generate new html pages and articles using templates!</h1>
+
+# Easily generate new html pages and articles using templates!
 <p>More details <a href="#details">below</a></p>
 
-<h2>Easy GUI Program to create html pages and articles using templates</h2>
+## Easy GUI Program to create html pages and articles using templates
 <p>This program uses template.html and article.txt files to create a new custom page with a specified title. All these can be done singurarly.
 <br />
 <ul>
