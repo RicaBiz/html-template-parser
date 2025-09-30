@@ -25,6 +25,15 @@
 <p>The GUI is made with the <a href="https://github.com/raylib-cs/raylib-cs">C# Raylib Bindings</a>.
 <br />I made custom Buttons, TextBoxes and Checkboxes, so the code is quickly reusable and workflow is smooth.</p>
 
-<h3>Written in C# .NET 8.0 uses Windows Forms to open Explorer</h3>
+### Written in C# .NET 8.0 uses Windows Forms to open Explorer
 <p>Due to the use of Windows Forms the program is currently Windows Only, I will make a version without it soon.</p>
+
+### What is coming next
+<p><ul>
+  <li>Cross Platform version.</li>
+  <li>Avoid crashing when xhtml is not well formed.</li>
+  <li>Files can be in any directory.</li>
+  <li>Multiple files handling at each operation.</li>
+  <li>Multiple articles handling.</li>
+</ul></p>
 
