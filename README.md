@@ -33,6 +33,8 @@
   <li>Cross Platform version.</li>
   <li>Avoid crashing when xhtml is not well formed.</li>
   <li>Files can be in any directory.</li>
+  <li>Custom meta description.</li>
+  <li>Custom css.</li>
   <li>Multiple files handling at each operation.</li>
   <li>Multiple articles handling.</li>
 </ul></p>
