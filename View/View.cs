@@ -18,6 +18,12 @@ namespace html_template_parser.View
         public Color DetailColor = detailColor;
     }
 
+    struct FileNamePath(String absoluteFilePath, String fileName)
+    {
+        public String AbsoluteFilePath = absoluteFilePath;
+        public String FileName = fileName;
+    }
+
     internal class View
     {
         private const int lineSpacing = 25;
@@ -60,6 +66,8 @@ namespace html_template_parser.View
                 new(screenWidth, screenHeight, posX, posY, clearButtonWidth, clearButtonHeight, "clear", clearButtonFontSize, defaultButtonPalette, defaultButtonPressedPalette, defaultButtonHoverPalette);
             public static TextBox TextBox(int posX, int posY) =>
                 new(screenWidth, screenHeight, posX, posY, defaultTextBoxWidth, defaultTextBoxHeight, defaultTextBoxFontSize, defaultTextBoxPalette, defaultTextBoxFocusPalette);
+            public static FileInputTextBox FileInputTextBox(int posX, int posY) =>
+                new(screenWidth, screenHeight, posX, posY, defaultTextBoxWidth, defaultTextBoxHeight, defaultInputTextBoxMaxChars, defaultTextBoxFontSize, defaultTextBoxPalette, defaultTextBoxFocusPalette);
             public static InputTextBox InputTextBox(int posX, int posY) =>
                 new InputTextBox(screenWidth, screenHeight, posX, posY, defaultTextBoxWidth, defaultTextBoxHeight, defaultInputTextBoxMaxChars, defaultTextBoxFontSize, defaultTextBoxPalette, defaultTextBoxFocusPalette);
         }
@@ -74,11 +82,15 @@ namespace html_template_parser.View
         private Button footerClearButton = ComponentTemplates.ClearButton(screenWidth / 3 - importButtonWidth / 2 - 10, (screenHeight - defaultTextFontSize) * 5 / 10 + clearButtonHeight / 2);
         private Button articleClearButton = ComponentTemplates.ClearButton(screenWidth / 3 - importButtonWidth / 2 - 10, (screenHeight - defaultTextFontSize) * 7 / 10 + clearButtonHeight / 2);
         private Button filenameClearButton = ComponentTemplates.ClearButton(screenWidth / 3 - importButtonWidth / 2 - 10, (screenHeight -defaultTextFontSize) * 9 / 10 + clearButtonHeight / 2);
-        private TextBox pageTemplateTextBox = ComponentTemplates.TextBox(padding + defaultTextBoxWidth / 2, (screenHeight - defaultTextFontSize) / 10);
-        private TextBox headerTextBox = ComponentTemplates.TextBox(padding + defaultTextBoxWidth / 2, (screenHeight - defaultTextFontSize) * 3 / 10);
-        private TextBox footerTextBox = ComponentTemplates.TextBox(padding + defaultTextBoxWidth / 2, (screenHeight - defaultTextFontSize) * 5 / 10);
-        private TextBox articleTextBox = ComponentTemplates.TextBox(padding + defaultTextBoxWidth / 2, (screenHeight - defaultTextFontSize) * 7 / 10);
-        private InputTextBox filenameTextBox = ComponentTemplates.InputTextBox(padding + defaultTextBoxWidth / 2, (screenHeight - defaultTextFontSize) * 9 / 10);
+        private FileInputTextBox pageTemplateTextBox = ComponentTemplates.FileInputTextBox(padding + defaultTextBoxWidth / 2, (screenHeight - defaultTextFontSize) / 10);
+        private FileInputTextBox headerTextBox = ComponentTemplates.FileInputTextBox(padding + defaultTextBoxWidth / 2, (screenHeight - defaultTextFontSize) * 3 / 10);
+        private FileInputTextBox footerTextBox = ComponentTemplates.FileInputTextBox(padding + defaultTextBoxWidth / 2, (screenHeight - defaultTextFontSize) * 5 / 10);
+        private FileInputTextBox articleTextBox = ComponentTemplates.FileInputTextBox(padding + defaultTextBoxWidth / 2, (screenHeight - defaultTextFontSize) * 7 / 10);
+        private FileInputTextBox filenameTextBox = ComponentTemplates.FileInputTextBox(padding + defaultTextBoxWidth / 2, (screenHeight - defaultTextFontSize) * 9 / 10);
+
+        private CheckBox multipleFilenamesCheckBox = new(screenWidth, screenHeight, padding * 2, (screenHeight - defaultTextFontSize) * 8 / 10, defaultCheckBoxEdgeLength * 2 / 3, defaultTextBoxPalette);
+        private List<FileNamePath> filenames = [];
+        private const int filenamesFontSize = 17;
 
         //Draw Options Section
         private CheckBox pageTemplateCheckBox = new(screenWidth, screenHeight, screenWidth * 2 / 3 - defaultCheckBoxEdgeLength / 2 - padding, (screenHeight - defaultTextFontSize) / 6, defaultCheckBoxEdgeLength, defaultTextBoxPalette);
@@ -143,11 +155,24 @@ namespace html_template_parser.View
             DrawText("Footer", padding, (screenHeight - defaultTextFontSize) * 5 / 10 - defaultTextBoxHeight / 2 - defaultLabelFontSize, defaultLabelFontSize, defaultTextColor);
             DrawText("Article", padding, (screenHeight - defaultTextFontSize) * 7 / 10 - defaultTextBoxHeight / 2 - defaultLabelFontSize, defaultLabelFontSize, defaultTextColor);
             DrawText("File Name", padding, (screenHeight - defaultTextFontSize) * 9 / 10 - defaultTextBoxHeight / 2 - defaultLabelFontSize, defaultLabelFontSize, defaultTextColor);
+            DrawText("multiple filenames", defaultCheckBoxEdgeLength * 2 / 3 + padding * 2, (screenHeight - defaultTextFontSize) * 8 / 10 - (defaultLabelFontSize - 5) / 2, defaultLabelFontSize - 5, defaultTextColor);
             pageTemplateTextBox.Draw();
             headerTextBox.Draw();
             footerTextBox.Draw();
             articleTextBox.Draw();
-            filenameTextBox.Draw();
+            multipleFilenamesCheckBox.Draw();
+            if (multipleFilenamesCheckBox.IsChecked)
+            {
+                //Draw list of filenames
+                DrawRectangleLinesEx(new(padding, (screenHeight - defaultTextFontSize) * 9 / 10 - defaultTextBoxHeight / 2, defaultTextBoxWidth, screenHeight - (screenHeight - defaultTextFontSize) * 9 / 10 - defaultTextBoxHeight / 2), 5, defaultTextBoxPalette.DetailColor);
+                int j = 0;
+                foreach (var filename in filenames)
+                {
+                    DrawText(filename.FileName, padding * 3 / 2,  (screenHeight - defaultTextFontSize) * 9 / 10 - defaultTextBoxHeight / 2 + padding / 2 + j++ * filenamesFontSize, filenamesFontSize, defaultTextColor);
+                }
+            }
+            else
+                filenameTextBox.Draw();
             pageTemplateImportButton.Draw();
             headerImportButton.Draw();
             footerImportButton.Draw();
@@ -194,33 +219,49 @@ namespace html_template_parser.View
             //File Specification Section
             if (pageTemplateImportButton.UpdateState())
             {
-                String pageTemplateFilename = SelectHtml();
-                pageTemplateTextBox.Text = pageTemplateFilename;
-                messages.Add("Selected Page Template: " + pageTemplateFilename);
+                FileNamePath pageTemplateFileNamePath = SelectHtml();
+                pageTemplateTextBox.Text = pageTemplateFileNamePath.FileName;
+                pageTemplateTextBox.AbsolutePath = pageTemplateFileNamePath.AbsoluteFilePath;
+                messages.Add("Selected Page Template: " + pageTemplateFileNamePath.FileName);
             }
             if (headerImportButton.UpdateState())
             {
-                String headerFilename = SelectHtml();
-                headerTextBox.Text = headerFilename;
-                messages.Add("Selected Header: " + headerFilename);
+                FileNamePath headerFileNamePath = SelectHtml();
+                headerTextBox.Text = headerFileNamePath.FileName;
+                headerTextBox.AbsolutePath = headerFileNamePath.AbsoluteFilePath;
+                messages.Add("Selected Header: " + headerFileNamePath.FileName);
             }
             if (footerImportButton.UpdateState())
             {
-                String footerFilename = SelectHtml();
-                footerTextBox.Text = footerFilename;
-                messages.Add("Selected Footer: " + footerFilename);
+                FileNamePath footerFileNamePath = SelectHtml();
+                footerTextBox.Text = footerFileNamePath.FileName;
+                footerTextBox.AbsolutePath = footerFileNamePath.AbsoluteFilePath;
+                messages.Add("Selected Footer: " + footerFileNamePath.FileName);
             }
             if (articleImportButton.UpdateState())
             {
-                String articleFilename = SelectTxt();
-                articleTextBox.Text = articleFilename;
-                messages.Add("Selected Article: " + articleFilename);
+                FileNamePath articleFileNamePath = SelectTxt();
+                articleTextBox.Text = articleFileNamePath.FileName;
+                articleTextBox.AbsolutePath = articleFileNamePath.AbsoluteFilePath;
+                messages.Add("Selected Article: " + articleFileNamePath.FileName);
             }
             if (filenameImportButton.UpdateState())
             {
-                String filename = SelectHtml();
-                filenameTextBox.Text = filename;
-                messages.Add("Selected Output File: " + filename);
+                if (multipleFilenamesCheckBox.IsChecked)
+                {
+                    filenames = SelectMultipleFiles("html");
+                    foreach (var filename in filenames)
+                    {
+                        messages.Add("Selected Output File: " + filename.FileName);
+                    }
+                }
+                else
+                {
+                    FileNamePath filenamePath = SelectHtml();
+                    filenameTextBox.Text = filenamePath.FileName;
+                    filenameTextBox.AbsolutePath = filenamePath.AbsoluteFilePath;
+                    messages.Add("Selected Output File: " + filenamePath.FileName);
+                }
             }
             if (pageTemplateClearButton.UpdateState())
             {
@@ -244,14 +285,26 @@ namespace html_template_parser.View
             }
             if (filenameClearButton.UpdateState())
             {
-                filenameTextBox.ClearText();
-                messages.Add("Cleared File Name");
+                if (multipleFilenamesCheckBox.IsChecked)
+                {
+                    filenames.Clear();
+                    messages.Add("Cleared File Names");
+                }
+                else
+                {
+                    filenameTextBox.ClearText();
+                    messages.Add("Cleared File Name");
+                }
             }
             pageTemplateTextBox.UpdateState();
             headerTextBox.UpdateState();
             footerTextBox.UpdateState();
             articleTextBox.UpdateState();
-            filenameTextBox.UpdateState();
+            multipleFilenamesCheckBox.UpdateState();
+            if (!multipleFilenamesCheckBox.IsChecked)
+            {
+                filenameTextBox.UpdateState();
+            }
 
             //Options Section
             pageTemplateCheckBox.UpdateState();
@@ -266,7 +319,15 @@ namespace html_template_parser.View
                     messages.Add("No options selected!");
                     return;
                 }
-                if (filenameTextBox.Text == "")
+                if (multipleFilenamesCheckBox.IsChecked)
+                {
+                    if (filenames.Count == 0)
+                    {
+                        messages.Add("No output files selected!");
+                        return;
+                    }
+                }
+                else if (filenameTextBox.Text == "")
                 {
                     messages.Add("Output File not specified!");
                     return;
@@ -283,7 +344,13 @@ namespace html_template_parser.View
                         messages.Add("Page Title not specified!");
                         return;
                     }
-                    Script.CreatePageTemplate(filenameTextBox.Text, pageTemplateTextBox.Text, pageTitleTextBox.Text);
+                    if (multipleFilenamesCheckBox.IsChecked)
+                    {
+                        messages.Add("Use single filename for Page Template option!");
+                        return;
+                    }
+                    else
+                        messages.Add(Script.CreatePageTemplate(filenameTextBox.AbsolutePath, pageTemplateTextBox.AbsolutePath, pageTitleTextBox.Text));
                 }
                 if (headerCheckBox.IsChecked)
                 {
@@ -292,7 +359,15 @@ namespace html_template_parser.View
                         messages.Add("Header not specified!");
                         return;
                     }
-                    Script.AddHeaderAndFooter(filenameTextBox.Text, headerTextBox.Text);
+                    if (multipleFilenamesCheckBox.IsChecked)
+                    {
+                        foreach (var filename in filenames)
+                        {
+                            messages.Add(Script.AddHeader(filename.AbsoluteFilePath, headerTextBox.AbsolutePath));
+                        }
+                    }
+                    else
+                        messages.Add(Script.AddHeader(filenameTextBox.AbsolutePath, headerTextBox.AbsolutePath));
                 }
                 if (footerCheckBox.IsChecked)
                 {
@@ -301,7 +376,15 @@ namespace html_template_parser.View
                         messages.Add("Footer not specified!");
                         return;
                     }
-                    Script.AddFooter(filenameTextBox.Text, footerTextBox.Text);
+                    if (multipleFilenamesCheckBox.IsChecked)
+                    {
+                        foreach (var filename in filenames)
+                        {
+                            messages.Add(Script.AddFooter(filename.AbsoluteFilePath, footerTextBox.AbsolutePath));
+                        }
+                    }
+                    else
+                        messages.Add(Script.AddFooter(filenameTextBox.AbsolutePath, footerTextBox.AbsolutePath));
                 }
                 if (articleCheckBox.IsChecked)
                 {
@@ -310,19 +393,43 @@ namespace html_template_parser.View
                         messages.Add("Article not specified!");
                         return;
                     }
-                    Script.AddArticle(filenameTextBox.Text, articleTextBox.Text);
+                    if (multipleFilenamesCheckBox.IsChecked)
+                    {
+                        messages.Add("Use single filename for Article option!");
+                        return;
+                    }
+                    else
+                        messages.Add(Script.AddArticle(filenameTextBox.AbsolutePath, articleTextBox.AbsolutePath));
                 }
             }
         }
-        private String SelectHtml()
+        private FileNamePath SelectHtml()
         {
             return SelectFile("html");
         }
-        private String SelectTxt()
+        private FileNamePath SelectTxt()
         {
             return SelectFile("txt");
         }
-        private String SelectFile(String extension)
+        private FileNamePath SelectAll()
+        {
+            return SelectFile("*");
+        }
+        private FileNamePath SelectFile(String extension)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Multiselect = false,
+                Title = "Select file",
+                Filter = extension + " Files (*." + extension + ")|*." + extension
+            };
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                return new(dialog.FileName, dialog.SafeFileName);
+            }
+            return new();
+        }
+        private List<FileNamePath> SelectMultipleFiles(String extension)
         {
             var dialog = new OpenFileDialog
             {
@@ -332,9 +439,14 @@ namespace html_template_parser.View
             };
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-                return dialog.SafeFileName;
+                List<FileNamePath> fileNamePaths = [];
+                for (int i = 0; i < dialog.FileNames.Length; i++)
+                {
+                    fileNamePaths.Add(new(dialog.FileNames[i], dialog.SafeFileNames[i]));
+                }
+                return fileNamePaths;
             }
-            return "";
+            return new();
         }
     }
 }

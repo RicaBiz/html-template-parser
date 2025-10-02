@@ -13,46 +13,99 @@ namespace html_template_parser
     {
         public static string CreatePageTemplate(string filename, string pageTemplateFilename, string pageTitle)
         {
-            var pageTemplate = XDocument.Load(pageTemplateFilename);
-            if (pageTemplate == null)
-                return "Failed to load Page Template!";
+            XDocument pageTemplate;
+            //Load page template XDocument, return error message if it fails
+            try
+            {
+                pageTemplate = XDocument.Load(pageTemplateFilename);
+                if (pageTemplate == null)
+                    return "Failed to load Page Template!";
+            }
+            catch (Exception ex)
+            {
+                return "Page Template Exception: " + ex.Message;
+            }
+
+            //Check if the document contains a <head> element
+            if (!pageTemplate.Descendants("head").Any())
+                return "No <head> found in page template file";
+
+            //Set the <title> element in the <head> to the provided page title
             pageTemplate.Descendants("head").First().SetElementValue("title", pageTitle);
             using (XmlHtmlWriter xw = new XmlHtmlWriter(XmlWriter.Create(filename, new XmlWriterSettings { OmitXmlDeclaration = true, Indent = true })))
                 pageTemplate.Save(xw);
             return "Created Page Template!";
         }
-        public static string AddHeaderAndFooter(string filename, string headerFilename)
+        public static string AddElementToPage(string pageFilename, string elementFilename, string elementName, string elementTagName)
         {
-            var page = XDocument.Load(filename);
-            if (page == null)
-                return "Failed to load Page!";
-            var header = XDocument.Load(headerFilename);
-            if (header == null)
-                return "Failed to load Header!";
-            page.Descendants("header").First().ReplaceWith(header.Descendants("header").First());
-            using (XmlHtmlWriter xw = new XmlHtmlWriter(XmlWriter.Create(filename, new XmlWriterSettings { OmitXmlDeclaration = true, Indent = true })))
+            XDocument page;
+            //Load page XDocument, return error message if it fails
+            try
+            {
+                page = XDocument.Load(pageFilename);
+                if (page == null)
+                    return "Failed to load Page!";
+            }
+            catch (Exception ex)
+            {
+                return "Page Exception: " + ex.Message;
+            }
+            XDocument header;
+            //Load header XDocument, return error message if it fails
+            try
+            {
+                header = XDocument.Load(elementFilename);
+                if (header == null)
+                    return "Failed to load " + elementName + "!";
+            }
+            catch (Exception ex)
+            {
+                return elementName + " Exception: " + ex.Message;
+            }
+
+            //Check if both documents contain a <header> element
+            if (!page.Descendants(elementTagName).Any())
+                return "No <" + elementTagName + "> found in destination file";
+            if (!header.Descendants(elementTagName).Any())
+                return "No <" + elementTagName + "> found in header file";
+
+            //Replace the <header> element in the page with the one from the header file
+            page.Descendants(elementTagName).First().ReplaceWith(header.Descendants(elementTagName).First());
+            using (XmlHtmlWriter xw = new XmlHtmlWriter(XmlWriter.Create(pageFilename, new XmlWriterSettings { OmitXmlDeclaration = true, Indent = true })))
                 page.Save(xw);
-            return "Added Header!";
+            return "Added " + elementName + "!";
+        }
+        public static string AddHeader(string filename, string headerFilename)
+        {
+            return AddElementToPage(filename, headerFilename, "Header", "header");
         }
         public static string AddFooter(string filename, string footerFilename)
         {
-            var page = XDocument.Load(filename);
-            if (page == null)
-                return "Failed to load Page!";
-            var footer = XDocument.Load(footerFilename);
-            if (footer == null)
-                return "Failed to load Footer!";
-            page.Descendants("footer").First().ReplaceWith(footer.Descendants("footer").First());
-            using (XmlHtmlWriter xw = new XmlHtmlWriter(XmlWriter.Create(filename, new XmlWriterSettings { OmitXmlDeclaration = true, Indent = true })))
-                page.Save(xw);
-            return "Added Footer!";
+            return AddElementToPage(filename, footerFilename, "Footer", "footer");
         }
         public static string AddArticle(string filename, string articleFilename)
         {
-            var page = XDocument.Load(filename);
-            if (page == null)
-                return "Failed to load Page!";
+            XDocument page;
+            //Load page XDocument, return error message if it fails
+            try
+            {
+                page = XDocument.Load(filename);
+                if (page == null)
+                    return "Failed to load Page!";
+            }
+            catch (Exception ex)
+            {
+                return "Page Exception: " + ex.Message;
+            }
+            //Check if the document contains an <article> element
+            if (!page.Descendants("article").Any())
+                return "No <article> found in page file";
+
             var articleLines = File.ReadAllLines(articleFilename);
+            if (articleLines.Length == 0)
+                return "Article file is empty!";
+            if (articleLines.Length == 1)
+                return "Article file only contains the title!";
 
             page.Descendants("article").First().SetElementValue("h2", articleLines.First());
             var p = new XElement("p");
