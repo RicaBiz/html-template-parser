@@ -15,7 +15,7 @@
 </ul></p>
 <h3 id="details">How does it work</h3>
 <p>Start the program. The GUI has only one page. Increase the size of the window if you can't see all GUI elements properly.
-<br /><strong>ALL FILES MUST BE WELL FORMED XHTML. All attributes must have a value (i.e. required="") and all point tags must have the closing /.
+<br /><strong>ALL FILES MUST BE WELL FORMED XHTML. All attributes must have a value (i.e. required="") and all point tags must have the closing /.</strong>
 <br /><b>On the left</b> you can import the filenames, you will need to import the names of all necessary files for each operation. The filename is the name of the file to be generated, and is always required.
 <br /><b>On the right</b> there are various messages displaying errors or updates. It will display whether you're missing necessary inputs, if it didn't find any file or if files are missing necessary components.
 <br /><b>On the center</b> you can choose which options and which templates you want to create your page with.
