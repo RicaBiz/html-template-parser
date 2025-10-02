@@ -5,13 +5,13 @@
 <p>More details <a href="#details">below</a></p>
 
 ## Easy GUI Program to create html pages and articles using templates
-<p>This program uses template.html and article.txt files to create a new custom page with a specified title or update an existing ones. All these can be done singurarly.
+<p>This program uses template.html and article.txt files to create a new custom page with a specified title or update existing html files. All these can be done singurarly.
 <br />
 <ul>
-  <li><b>Add custom header.</b></li>
-  <li><b>Add custom footer.</b></li>
-  <li><b>Add custom article.</b></li>
-  <li><b>Create custom page template with custom title.</b></li>
+  <li><b>Add custom header to one or multiple files.</b></li>
+  <li><b>Add custom footer to one or multiple files.</b></li>
+  <li><b>Add custom article to one file.</b></li>
+  <li><b>Create a custom page template with custom title.</b></li>
 </ul></p>
 <h3 id="details">How does it work</h3>
 <p>Start the program. The GUI has only one page. Increase the size of the window if you can't see all GUI elements properly.
